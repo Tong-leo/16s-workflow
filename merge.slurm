@@ -49,9 +49,16 @@ find "$folder2" -type f -print0 | while IFS= read -r -d '' file; do
 done
 
 cd /dm_data/tongjw/20250306-anti
+
+source ~/.bashrc
+conda activate cap
+python /home_data/home/spst/tongjw2024/code/statistical_bbmap.py -i /dm_data/tongjw/20250306-anti/merge/ -o /dm_data/tongjw/20250306-anti -s 200
+conda deactivate
+
+cd /dm_data/tongjw/20250306-anti
 mkdir corrected
 
-input_folder="/dm_data/tongjw/20250306-anti/merge/" 
+input_folder="/dm_data/tongjw/20250306-anti/bbmap_output_many_seqs/" 
 output_folder="/dm_data/tongjw/20250306-anti/corrected/" 
 
 for fastq_file in "$input_folder"/*.fastq; do
@@ -68,6 +75,19 @@ for fastq_file in "$input_folder"/*.fastq; do
     
     # 可选：删除中间文件以节省空间
     rm "$filename.fasta" "$filename.msbwt.npy" "$filename.corrected.fasta"
+done
+
+mkdir bbmap_output_many_seqs_cut
+
+input_folder="/dm_data/tongjw/20250306-anti/corrected/" 
+output_folder="/dm_data/tongjw/20250306-anti/bbmap_output_many_seqs_cut/" 
+
+for fasta_file in "$input_folder"/*.fasta; do
+
+    filename=$(basename "$fasta_file" .fasta)
+	
+	cutadapt -g "AGAGTTTGATCATGGCTCAG;min_overlap=19...AAGTCGTAACAAGGTAGCCGTA;min_overlap=19" --action=retain --cores 32 -e 0.15 --discard-untrimmed -o "$output_folder/$filename.fasta" "$input_folder/$filename.fasta"
+
 done
 
 echo "Processing completed."
